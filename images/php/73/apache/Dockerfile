@@ -12,6 +12,7 @@ RUN apt-get update \
     libldap2-dev \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
+    libxml2-dev \
     git \
     --no-install-recommends
 
@@ -21,14 +22,16 @@ RUN apt-get clean \
 
 RUN adduser sugar --disabled-password --disabled-login --gecos ""
 
+RUN echo "<?php \$_SERVER['SERVER_SOFTWARE'] = 'SugarDockerized';" > /usr/local/php/prepend.php
+
 RUN echo 'date.timezone = GMT' >> /usr/local/etc/php/conf.d/docker.ini \
     && echo 'error_reporting = E_ALL \& ~E_NOTICE \& ~E_STRICT \& ~E_DEPRECATED' >> /usr/local/etc/php/conf.d/docker.ini \
     && echo 'error_log = /var/log/apache2/error.log' >> /usr/local/etc/php/conf.d/docker.ini \
     && echo 'log_errors = On' >> /usr/local/etc/php/conf.d/docker.ini \
     && echo 'display_errors = Off' >> /usr/local/etc/php/conf.d/docker.ini \
-    && echo 'memory_limit = 1024M' >> /usr/local/etc/php/conf.d/docker.ini \
-    && echo 'post_max_size = 300M' >> /usr/local/etc/php/conf.d/docker.ini \
-    && echo 'upload_max_filesize = 300M' >> /usr/local/etc/php/conf.d/docker.ini \
+    && echo 'memory_limit = 512M' >> /usr/local/etc/php/conf.d/docker.ini \
+    && echo 'post_max_size = 100M' >> /usr/local/etc/php/conf.d/docker.ini \
+    && echo 'upload_max_filesize = 100M' >> /usr/local/etc/php/conf.d/docker.ini \
     && echo 'max_execution_time = 600' >> /usr/local/etc/php/conf.d/docker.ini \
     && echo 'max_input_time = 600' >> /usr/local/etc/php/conf.d/docker.ini \
     && echo 'realpath_cache_size = 512k' >> /usr/local/etc/php/conf.d/docker.ini \
@@ -38,7 +41,8 @@ RUN echo 'date.timezone = GMT' >> /usr/local/etc/php/conf.d/docker.ini \
     && echo 'session.cookie_httponly = 1' >> /usr/local/etc/php/conf.d/docker.ini \
     && echo 'session.use_trans_sid = 0' >> /usr/local/etc/php/conf.d/docker.ini \
     && echo 'session.save_handler = redis' >> /usr/local/etc/php/conf.d/docker.ini \
-    && echo 'session.save_path = "tcp://sugar-redis:6379"' >> /usr/local/etc/php/conf.d/docker.ini
+    && echo 'session.save_path = "tcp://sugar-redis:6379"' >> /usr/local/etc/php/conf.d/docker.ini \
+    && echo 'auto_prepend_file = "/usr/local/php/prepend.php"' >> /usr/local/etc/php/conf.d/docker.ini
 
 COPY config/apache2/mods-available/deflate.conf /etc/apache2/mods-available/deflate.conf
 COPY config/apache2/sites-available/sugar.conf /etc/apache2/sites-available/sugar.conf
@@ -62,15 +66,16 @@ RUN docker-php-ext-install mysqli \
     && docker-php-ext-install imap \
     && docker-php-ext-install zip \
     && docker-php-ext-install ldap \
-    # problem for xdebug 2.6.1 with php 7.3rc (https://bugs.xdebug.org/view.php?id=1584)
-    && pecl install xdebug-2.7.0beta1 \
+    && docker-php-ext-install pcntl \
+    && pecl install xdebug-2.9.5 \
     && pecl install redis \
-    && docker-php-ext-enable redis
+    && docker-php-ext-enable redis \
+    && docker-php-ext-install soap
 
-# disable by default, it can be enabled locally
-#COPY config/php/mods-available/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
+COPY config/php/mods-available/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 COPY config/php/mods-available/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 COPY config/php/opcache-blacklist /usr/local/etc/php/opcache-blacklist
+COPY config/php/mods-available/soap.ini /usr/local/etc/php/conf.d/soap.ini
 
 RUN git clone https://github.com/tideways/php-xhprof-extension.git tideways \
     && cd tideways \

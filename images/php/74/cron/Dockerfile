@@ -14,6 +14,7 @@ RUN apt-get update \
     libldap2-dev \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
+    libxml2-dev \
     git \
     --no-install-recommends
 
@@ -24,6 +25,8 @@ RUN apt-get clean \
 RUN adduser sugar --disabled-password --disabled-login --gecos "" \
     && echo "sugar ALL=NOPASSWD: ALL" > /etc/sudoers.d/sugar
 
+RUN echo "<?php \$_SERVER['SERVER_SOFTWARE'] = 'SugarDockerized';" > /usr/local/php/prepend.php
+
 RUN echo 'date.timezone = GMT' >> /usr/local/etc/php/conf.d/docker.ini \
     && echo 'error_reporting = E_ALL \& ~E_WARNING \& ~E_NOTICE \& ~E_STRICT \& ~E_DEPRECATED' >> /usr/local/etc/php/conf.d/docker.ini \
     && echo 'error_log = /proc/1/fd/1' >> /usr/local/etc/php/conf.d/docker.ini \
@@ -33,11 +36,13 @@ RUN echo 'date.timezone = GMT' >> /usr/local/etc/php/conf.d/docker.ini \
     && echo 'max_execution_time = -1' >> /usr/local/etc/php/conf.d/docker.ini \
     && echo 'realpath_cache_size = 512k' >> /usr/local/etc/php/conf.d/docker.ini \
     && echo 'realpath_cache_ttl = 600' >> /usr/local/etc/php/conf.d/docker.ini \
-    && echo 'mbstring.func_overload = 0' >> /usr/local/etc/php/conf.d/docker.ini
+    && echo 'mbstring.func_overload = 0' >> /usr/local/etc/php/conf.d/docker.ini \
+    && echo 'auto_prepend_file = "/usr/local/php/prepend.php"' >> /usr/local/etc/php/conf.d/docker.ini
 
 RUN docker-php-ext-install mysqli \
     && docker-php-ext-install bcmath \
-    # && docker-php-ext-configure gd --with-freetype-dir \
+    # PHP 7.4 - Problems on GD with JPEG and FreeType support
+    # && docker-php-ext-configure gd --with-freetype-dir \  
     && docker-php-ext-install gd \
     && docker-php-ext-install gmp \
     && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
@@ -46,7 +51,14 @@ RUN docker-php-ext-install mysqli \
     && docker-php-ext-install ldap \
     && pecl install xdebug \
     && pecl install redis \
-    && docker-php-ext-enable redis
+    && docker-php-ext-enable redis \
+    && docker-php-ext-install soap
+
+# FIX for PHP 7.4 - Problems on GD with JPEG and FreeType support
+RUN docker-php-ext-configure gd --enable-gd --with-freetype --with-jpeg
+RUN cd /usr/src/php/ext/gd && make
+RUN cp /usr/src/php/ext/gd/modules/gd.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/gd.so
+RUN docker-php-ext-install -j$(nproc) gd
 
 # disable by default, it can be enabled locally
 #COPY config/php/mods-available/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini

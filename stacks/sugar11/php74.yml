@@ -78,21 +78,34 @@ services:
         image: sugar_permissions
         volumes:
             - ../../data/app:/var/www/html
-    servicios-merx:
-        container_name: "servicios-merx"
-        # build: /home/jsanchez/Documentos/merx/docker/servicios       
-        volumes:
-        - /home/jsanchez/Documentos/merx/docker/servicios:/var/www
-        ports:
-            - "4000:4000"
-            - "5000:5000"
-            - "6400:6400"
-        image: "jsanchezl/servicios-merx"
-        # environment:
-        #     - NODE_ENV=test
-        # command: ["sh", "-c", "node app.js"]
-        stdin_open: true
-        tty: true
+    # servicios-merx:
+    #     container_name: "servicios-merx"
+    #     # build: /home/jsanchez/Documentos/merx/docker/servicios       
+    #     volumes:
+    #     - /home/jsanchez/Documentos/merx/docker/servicios:/var/www/html/merxbp
+    #     ports:
+    #         - "4000:4000"
+    #         - "5000:5000"
+    #         - "6400:6400"
+    #     image: "jsanchezl/servicios-merx"
+    #     stdin_open: true
+    #     tty: true
+    # mongo:
+    #     container_name: "servicios-merx-mongo"
+    #     image: mongo
+    #     restart: always
+    #     environment:
+    #         MONGO_INITDB_ROOT_USERNAME: root
+    #         MONGO_INITDB_ROOT_PASSWORD: example
+    # mongo-express:
+    #     container_name: "servicios-merx-mongo-express"
+    #     image: mongo-express
+    #     restart: always
+    #     ports:
+    #     - 8081:8081
+    #     environment:
+    #         ME_CONFIG_MONGODB_ADMINUSERNAME: root
+    #         ME_CONFIG_MONGODB_ADMINPASSWORD: example
 
 volumes:
     es-data01:
