@@ -47,7 +47,6 @@ services:
             - "3306:3306"
         volumes:
             - ../../data/mysql/57:/var/lib/mysql
-            - ../../data/app/sugar:/backup
         environment:
             - MYSQL_ROOT_PASSWORD=root
             - MYSQL_USER=sugar
