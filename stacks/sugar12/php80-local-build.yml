@@ -6,7 +6,7 @@ services:
         image: sugar_php80_web
         build: ../../images/php/80/apache
         ports:
-            - "80:80"
+            - "8080:80"
         extra_hosts:
             - "docker.local:127.0.0.1"
         environment:

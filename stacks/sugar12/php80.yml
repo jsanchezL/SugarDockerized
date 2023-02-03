@@ -5,7 +5,7 @@ services:
         container_name: "sugar-web1"
         image: esimonetti/sugardockerized:php8.0-apache-1.51
         ports:
-            - "80:80"
+            - "8080:80"
         extra_hosts:                                   
             - "docker.local:127.0.0.1"                        
         environment:
